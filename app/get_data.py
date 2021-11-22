@@ -9,7 +9,7 @@ source_list = [
 
 class AllData(BaseModel):
     source_list: list = source_list
-    item_list: list
+    item_list: list = []
 
     def update_all_sources(self):
         for source in self.source_list:
