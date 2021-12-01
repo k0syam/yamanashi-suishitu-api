@@ -5,7 +5,8 @@ import tabula
 from tika import parser
 import json
 import os
-from . import get_data
+from .static import get_data
+from .static.dataitem import DataItem
 
 root_path = os.getenv("ROOT_PATH", "")
 app = FastAPI(
@@ -35,16 +36,8 @@ def read_area(source_name: str):
         [type]: [description]
     """
     all_data = get_data.AllData()
-    for source in all_data.source_list:
-        if source_name in source["source_name"]:
-            dir = os.path.dirname(__file__)
-            file_path = dir + "/" + source_name + ".pdf"
-            print(file_path)
-    file_data = parser.from_file(file_path)
-    text = file_data["content"]
-    regions = [s for s in text.split("\n") if "水域名" in s]
-    regions = [s.split()[1] for s in regions]
-    ret = {"areas": regions}
+    areas = all_data.obtain_dataitem_static(source_name)["areas"]
+    ret = {"areas": areas}
     return ret
 
 @app.get("/source/{source_name}/area/{area}")
@@ -59,21 +52,10 @@ def read_data(source_name: str, area: str):
         [type]: [description]
     """
     all_data = get_data.AllData()
-    for source in all_data.source_list:
-        if source_name in source["source_name"]:
-            path = source["target_url"]
-    previous_df = pd.DataFrame()
-    file_data = parser.from_file(path)
-    text = file_data["content"]
-    regions = [s for s in text.split("\n") if "水域名" in s]
-    for i, region in enumerate(regions):
-        if area in region:
-            dfs = tabula.read_pdf(path, lattice=True, pages = i+1)
-            print(dfs)
-    # データ結合
-    # for df in dfs:
-    #     if (check_columns(df, previous_df)):
-    #         df = pd.concat([previous_df, df])
-    #     previous_df = df
-    # return previous_df
-    return dfs
+    areas = all_data.obtain_dataitem_static(source_name)["areas"]
+    dataitems = all_data.obtain_dataitem_static(source_name)["dataitems"]
+    ret = []
+    for dataitem in dataitems:
+        if dataitem.measurement_point == area:
+            ret.append(dataitem.json())
+    return ret
