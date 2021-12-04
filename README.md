@@ -1,8 +1,8 @@
-# suishitsu-api
+# yamanashi-suishitsu-api
 山梨県公共用水域水質測定結果取得API(Under developing)
 
 # APIの内容
-## ルート
+## /
 * 保有データしているソースの一覧を取得する
 ## /source/{source_name}
 * そのソースに記載のある測定地点の一覧を取得する
@@ -22,6 +22,13 @@
 * データを更新する: `python -m app.static.get_data`
     * static内に.pdfファイルと.dataitemファイルが生成される
 
+# データ対応状況
+* 富士五湖：平成19年度～平成29年度 (Hxx_fujigoko)
+    * データ取得・開発環境での動作確認済み
+    * 令和以降のデータが検索ヒットせず．情報もとむ
+    * H19以前はNG(日付フォーマット部分のPDF読み取り)
+* 他流域：(source_list追加により反映可能)
+
 # 参照プロジェクト
 * [山梨県オープンデータAPIプロジェクト](https://github.com/opendata-yamanashi)
-* [Singen.py FAST API](https://github.com/opendata-yamanashi)
+* [Singen.py FAST API](https://github.com/shingenpy/fastapi_workshop)

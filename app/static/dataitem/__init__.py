@@ -1,7 +1,8 @@
 import datetime
 from pydantic import BaseModel
 
-__all__ = ['DataItem']
+__all__ = ["DataItem"]
+
 
 class DataItem(BaseModel):
     source_name: str

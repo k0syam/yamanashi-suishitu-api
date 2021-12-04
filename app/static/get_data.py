@@ -10,25 +10,69 @@ import tabula
 from tika import parser
 from app.static.dataitem import DataItem
 
+# ソースリスト一覧
+# 公開されているURLをもとにデータ追加を随時行う
+# 現状source_nameには2バイト文字使用できない(file not found エラーが生じる)
 source_list = [
     {
-        "source_name": "H24",
+        "source_name": "H19_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/fujigokoh19.pdf",
+    },{
+        "source_name": "H20_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h20fujigoko_1.pdf",
+    },{
+        "source_name": "H21_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h21fujigoko.pdf",
+    },{
+        "source_name": "H22_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h22fujigoko.pdf",
+    },{
+        "source_name": "H23_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/hujigokoh25.pdf",
+    },{
+        "source_name": "H24_fujigoko",
         "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h24fujigoko.pdf",
+    },{
+        "source_name": "H25_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h25fujigoko.pdf",
+    },{
+        "source_name": "H26_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h26fujigoko.pdf",
+    },{
+        "source_name": "H27_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h27_14fujigokoryuuiki.pdf",
+    },{
+        "source_name": "H28_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h28_14fujigokoryuuiki.pdf",
+    },{
+        "source_name": "H29_fujigoko",
+        "target_url": "https://www.pref.yamanashi.jp/taiki-sui/documents/h29_4fujigoko.pdf",
     },
 ]
 
-
+# データハンドリングを行うクラス
 class AllData(BaseModel):
     source_list: list = source_list
 
     def update_all_sources(self, update_all=True):
+        """source_listに基づいてすべてのデータを取得・更新する
+
+        Args:
+            update_all (bool, optional): .dataitemの有無にかかわらずすべてアップデートするかどうか. Defaults to True.
+        """
         for source in self.source_list:
             url = source["target_url"]
             source_name = source["source_name"]
             self.download_file_if_needed(url, source_name + ".pdf")
             self.update_dataitem(source_name, update_all=update_all)
 
-    def update_dataitem(self, source_name, update_all=True):
+    def update_dataitem(self, source_name: str, update_all=True):
+        """特定のソースから.dataitemを出力する
+
+        Args:
+            source_name (str): ソース名
+            update_all (bool, optional): .dataitemの有無にかかわらずすべてアップデートするかどうか. Defaults to True.
+        """
         dir = os.path.dirname(__file__)
         pdf_path = dir + "/" + source_name + ".pdf"
         dataitem_path = dir + "/" + source_name + ".dataitem"
@@ -53,10 +97,20 @@ class AllData(BaseModel):
                     elif "0" in label:
                         continue
                     else:
-                        date_str = content.values[0] + content.values[1]
-                        measurement_date = datetime.datetime.strptime(
-                            date_str, "%m月%d日%H時%M分"
-                        )
+                        date_str = content.values[0] + " " + content.values[1]
+                        if "月" in date_str:
+                            if "時" in date_str:
+                                measurement_date = datetime.datetime.strptime(
+                                    date_str, "%m月%d日 %H時%M分"
+                                )
+                            else:
+                                measurement_date = datetime.datetime.strptime(
+                                    date_str, "%m月%d日 %H:%M"
+                                )
+                        else:
+                            measurement_date = datetime.datetime.strptime(
+                                date_str, "%m/%d %H:%M"
+                            )
                         weather = content.values[2]
                         for category, value in zip(index_name[3:], content.values[3:]):
                             if type(value) == str:
@@ -73,8 +127,16 @@ class AllData(BaseModel):
             with open(dataitem_path, "wb") as f:
                 pickle.dump(ret, f, -1)
 
-    def download_file_if_needed(self, url, filename):
-        """ローカルにデータファイルがない場合は、データファイルをダウンロードする"""
+    def download_file_if_needed(self, url: str, filename: str):
+        """ローカルにデータファイルがない場合は、データファイルをダウンロードする
+
+        Args:
+            url (str): PDFダウンロード先のURL
+            filename (str): 保存ファイル名
+
+        Returns:
+            file_path (pathlib.Path): 保存したファイル名
+        """
         dir = os.path.dirname(__file__)
         file_path = dir + "/" + filename
         if not os.path.exists(file_path):
@@ -83,7 +145,15 @@ class AllData(BaseModel):
                 f.write(data)
         return file_path
 
-    def obtain_dataitem_static(self, source_name):
+    def obtain_dataitem_static(self, source_name: str):
+        """生成済みの.dataitemを読み込んでlistとして返す
+
+        Args:
+            source_name (str): 参照するソース名(ex. H24)
+
+        Returns:
+            ret: .dataitemを保有するlist
+        """
         dir = os.path.dirname(__file__)
         dataitem_path = dir + "/" + source_name + ".dataitem"
         with open(dataitem_path, "rb") as f:
