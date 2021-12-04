@@ -10,6 +10,8 @@ import tabula
 from tika import parser
 from app.static.dataitem import DataItem
 
+# ソースリスト一覧
+# 公開されているURLをもとにデータ追加を随時行う
 source_list = [
     {
         "source_name": "H24",
@@ -17,18 +19,29 @@ source_list = [
     },
 ]
 
-
+# データハンドリングを行うクラス
 class AllData(BaseModel):
     source_list: list = source_list
 
     def update_all_sources(self, update_all=True):
+        """source_listに基づいてすべてのデータを取得・更新する
+
+        Args:
+            update_all (bool, optional): .dataitemの有無にかかわらずすべてアップデートするかどうか. Defaults to True.
+        """
         for source in self.source_list:
             url = source["target_url"]
             source_name = source["source_name"]
             self.download_file_if_needed(url, source_name + ".pdf")
             self.update_dataitem(source_name, update_all=update_all)
 
-    def update_dataitem(self, source_name, update_all=True):
+    def update_dataitem(self, source_name: str, update_all=True):
+        """特定のソースから.dataitemを出力する
+
+        Args:
+            source_name (str): ソース名
+            update_all (bool, optional): .dataitemの有無にかかわらずすべてアップデートするかどうか. Defaults to True.
+        """
         dir = os.path.dirname(__file__)
         pdf_path = dir + "/" + source_name + ".pdf"
         dataitem_path = dir + "/" + source_name + ".dataitem"
@@ -73,8 +86,16 @@ class AllData(BaseModel):
             with open(dataitem_path, "wb") as f:
                 pickle.dump(ret, f, -1)
 
-    def download_file_if_needed(self, url, filename):
-        """ローカルにデータファイルがない場合は、データファイルをダウンロードする"""
+    def download_file_if_needed(self, url: str, filename: str):
+        """ローカルにデータファイルがない場合は、データファイルをダウンロードする
+
+        Args:
+            url (str): PDFダウンロード先のURL
+            filename (str): 保存ファイル名
+
+        Returns:
+            file_path (pathlib.Path): 保存したファイル名
+        """
         dir = os.path.dirname(__file__)
         file_path = dir + "/" + filename
         if not os.path.exists(file_path):
@@ -83,7 +104,15 @@ class AllData(BaseModel):
                 f.write(data)
         return file_path
 
-    def obtain_dataitem_static(self, source_name):
+    def obtain_dataitem_static(self, source_name: str):
+        """生成済みの.dataitemを読み込んでlistとして返す
+
+        Args:
+            source_name (str): 参照するソース名(ex. H24)
+
+        Returns:
+            ret: .dataitemを保有するlist
+        """
         dir = os.path.dirname(__file__)
         dataitem_path = dir + "/" + source_name + ".dataitem"
         with open(dataitem_path, "rb") as f:
