@@ -1,5 +1,5 @@
 # yamanashi-suishitsu-api
-山梨県公共用水域水質測定結果取得API(Under developing)
+山梨県公共用水域水質測定結果取得API
 
 # APIの内容
 ## /
@@ -30,5 +30,6 @@
 * 他流域：(source_list追加により反映可能)
 
 # 参照プロジェクト
+* [山梨県オープンデータサイト](https://www.pref.yamanashi.jp/opendata/catalog/)
 * [山梨県オープンデータAPIプロジェクト](https://github.com/opendata-yamanashi)
 * [Singen.py FAST API](https://github.com/shingenpy/fastapi_workshop)
