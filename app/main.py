@@ -10,6 +10,12 @@ from .static import get_data
 from .static.dataitem import DataItem
 
 root_path = os.getenv("ROOT_PATH", "")
+
+# 全データの取得をおこなう
+get_all_data = get_data.AllData()
+get_all_data.update_all_sources()
+
+
 app = FastAPI(title="公共用水域水質測定結果API", root_path=root_path)
 
 
